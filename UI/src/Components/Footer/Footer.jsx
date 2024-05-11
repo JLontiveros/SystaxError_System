@@ -32,7 +32,7 @@ const Footer = () => {
       </div>
       <div className="footer-copyright">
         <hr/>
-        <p>Copyright @ 2024 - All Right Reserved</p>
+        <p>BSIT 3 A - SYNTAX ERROR</p>
       </div>
     </div>
   )
