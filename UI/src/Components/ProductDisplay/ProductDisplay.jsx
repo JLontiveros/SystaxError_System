@@ -39,8 +39,8 @@ const ProductDisplay = (props) => {
                 Lorem ipsum, dolor sit amet consectetur adipisicing elit. Commodi voluptatibus natus necessitatibus quibusdam numquam, possimus eveniet in itaque ad. Consectetur blanditiis laborum laboriosam cumque adipisci doloremque beatae accusantium culpa commodi?
             </div>
             <button onClick={()=>{addToCart(product.id)}}>ADD TO CART</button>
-            <p className='productdisplay-right-category'><span>Category :</span>Women , TShirt, Crop Top</p>
-            <p className='productdisplay-right-category'><span>Tags :</span>Modern, Latest</p>
+            <p className='productdisplay-right-category'><span>Category :</span>FOOD , CAT, DOG</p>
+            <p className='productdisplay-right-category'><span>Tags :</span>Supplies, Food</p>
       </div>
     </div>
   )
