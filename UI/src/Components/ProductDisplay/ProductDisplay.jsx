@@ -32,21 +32,11 @@ const ProductDisplay = (props) => {
                 <p>(20)</p>
             </div>
             <div className="productdisplay-right-prices">
-                <div className="productdisplay-right-price-old">${product.old_price}</div>
-                <div className="productdisplay-right-price-new">${product.new_price}</div>
+                <div className="productdisplay-right-price-old">PHP {product.old_price}</div>
+                <div className="productdisplay-right-price-new">PHP {product.new_price}</div>
             </div>
             <div className="productdisplay-right-description">
                 Lorem ipsum, dolor sit amet consectetur adipisicing elit. Commodi voluptatibus natus necessitatibus quibusdam numquam, possimus eveniet in itaque ad. Consectetur blanditiis laborum laboriosam cumque adipisci doloremque beatae accusantium culpa commodi?
-            </div>
-            <div className="productdisplay-right-size">
-                <h1>Select Size</h1>
-                <div className="productdisplay-right-sizes">
-                    <div>S</div>
-                    <div>M</div>
-                    <div>L</div>
-                    <div>XL</div>
-                    <div>XXL</div>
-                </div>
             </div>
             <button onClick={()=>{addToCart(product.id)}}>ADD TO CART</button>
             <p className='productdisplay-right-category'><span>Category :</span>Women , TShirt, Crop Top</p>
