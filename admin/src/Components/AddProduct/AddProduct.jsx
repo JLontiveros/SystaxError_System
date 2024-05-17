@@ -32,9 +32,6 @@ const AddProduct = () => {
         try {
             const uploadResponse = await fetch('http://localhost:4000/upload', {
                 method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                },
                 body: formData,
             });
 
@@ -42,17 +39,14 @@ const AddProduct = () => {
                 throw new Error(`Upload failed with status: ${uploadResponse.status}`);
             }
 
-            const responseText = await uploadResponse.text();
-            responseData = responseText ? JSON.parse(responseText) : null;
+            const uploadResult = await uploadResponse.json();
 
-            if (responseData && responseData.success) {
-                product.image = responseData.image_url;
-                console.log(product);
+            if (uploadResult && uploadResult.success) {
+                product.image = uploadResult.image_url;
 
                 const addProductResponse = await fetch('http://localhost:4000/addproduct', {
                     method: 'POST',
                     headers: {
-                        Accept: 'application/json',
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(product),
@@ -63,13 +57,14 @@ const AddProduct = () => {
                 }
 
                 const addProductData = await addProductResponse.json();
+
                 if (addProductData.success) {
                     alert("Product Added");
                 } else {
                     alert("Failed to add product");
                 }
             } else {
-                console.error('Upload failed:', responseData);
+                console.error('Upload failed:', uploadResult);
             }
         } catch (error) {
             console.error('Fetch error:', error);
@@ -84,11 +79,11 @@ const AddProduct = () => {
             </div>
             <div className="addproduct-price">
                 <div className="addproduct-itemfield">
-                    <p>Price</p>
+                    <p>Current Price in PHP</p>
                     <input value={productDetails.old_price} onChange={changeHandler} type="text" name="old_price" placeholder="Type here" />
                 </div>
                 <div className="addproduct-itemfield">
-                    <p>Offer Price</p>
+                    <p>Discounted Price in PHP</p>
                     <input value={productDetails.new_price} onChange={changeHandler} type="text" name="new_price" placeholder="Type here" />
                 </div>
             </div>
@@ -97,7 +92,7 @@ const AddProduct = () => {
                 <select value={productDetails.category} onChange={changeHandler} name="category" className='add-product-selector'>
                     <option value="cat">Cat</option>
                     <option value="dog">Dog</option>
-                    <option value="accessories">Accessories</option>
+                    <option value="accessories">Supplies</option>
                 </select>
             </div>
             <div className="addproduct-itemfield">
@@ -108,7 +103,7 @@ const AddProduct = () => {
             </div>
             <button onClick={Add_Product} className='addproduct-btn'>ADD</button>
         </div>
-    )
-}
+    );
+};
 
 export default AddProduct;
