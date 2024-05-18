@@ -124,17 +124,6 @@
         height: 45px;
         font-size: 13px;
     }
-    .cartitems-promobox{
-        width: auto;
-        max-width: 500px;
-    }
-    .cartitems-promobox input{
-        width: 100%;
-    }
-    .cartitems-promobox button{
-        width: 120px;
-        margin-left: -125px;
-    }
 }
 @media(max-width:500){
     .cartitems-format-main{
