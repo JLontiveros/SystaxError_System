@@ -33,3 +33,8 @@
 .place-order .cart-total button{
     margin-top: 30px;
 }
+.place-order-right img {
+    width: 200px; 
+    margin-top: 30px; 
+    border-radius: 6px;
+}

@@ -2,9 +2,12 @@ import React, { useContext, useState } from 'react';
 import './CSS/PlaceOrder.css';
 import { ShopContext } from '../Context/ShopContext';
 import axios from 'axios';
+import upload_area from '../Components/Assets/upload_area.svg';
+import gikas from '../Components/Assets/gikas.PNG';
 
 const PlaceOrder = () => {
   const { getTotalCartAmount, cartItems } = useContext(ShopContext);
+  const [image, setImage] = useState(null);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -30,22 +33,26 @@ const PlaceOrder = () => {
     e.preventDefault();
 
     const totalAmount = getTotalCartAmount();
-    const items = cartItems; // Assuming `cartItems` is an array of items in the cart
+    const items = cartItems;
+
+    const form = new FormData();
+    form.append('items', JSON.stringify(items));
+    form.append('totalAmount', totalAmount);
+    form.append('deliveryInfo', JSON.stringify(formData));
+    if (image) {
+      form.append('image', image);
+    }
 
     try {
-      const response = await axios.post('http://localhost:4001/placeorder', {
-        items,
-        totalAmount,
-        deliveryInfo: formData
-      }, {
+      const response = await axios.post('http://localhost:4000/placeorder', form, {
         headers: {
-          'auth-token': localStorage.getItem('token') // Assuming the token is stored in localStorage
+          'auth-token': `${localStorage.getItem('auth-token')}`,
+          'Content-Type': 'multipart/form-data'
         }
       });
 
       if (response.data.success) {
-        alert('Order placed successfully!');
-        // Optionally, you can redirect the user or clear the form/cart
+        alert('Order placed successfully! Wait for us to message you about your order!');
       } else {
         alert('Failed to place order');
       }
@@ -55,8 +62,12 @@ const PlaceOrder = () => {
     }
   };
 
+  const imageHandler = (e) => {
+    setImage(e.target.files[0]);
+  };
+
   return (
-    <form className='place-order' onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className='place-order'>
       <div className="place-order-left">
         <p className="title">Delivery Information</p>
         <div className="multi-fields">
@@ -74,6 +85,11 @@ const PlaceOrder = () => {
           <input type="text" name="country" placeholder='Country' value={formData.country} onChange={handleChange} required />
         </div>
         <input type="text" name="phone" placeholder='Phone' value={formData.phone} onChange={handleChange} required />
+        <p className="upload-receipt-text">UPLOAD RECEIPT HERE</p>
+        <label htmlFor="file-input">
+          <img src={image ? URL.createObjectURL(image) : upload_area} className='addproduct-thumbnail-img' alt="" />
+          <input id="file-input" type="file" onChange={imageHandler} style={{ display: 'none' }} />
+        </label>
       </div>
       <div className="place-order-right">
         <div className="cartitems-total">
@@ -94,11 +110,12 @@ const PlaceOrder = () => {
               <h3>PHP {getTotalCartAmount()}</h3>
             </div>
           </div>
-          <button type="submit">PROCEED TO PAYMENT</button>
+          <button type="submit">Payment</button>
+          <img src={gikas} alt="" />
         </div>
       </div>
     </form>
   );
-}
+};
 
 export default PlaceOrder;
