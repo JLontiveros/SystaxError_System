@@ -16,11 +16,6 @@ mongoose.connect('mongodb+srv://eatpiemordecai:Jlro122002@cluster0.ovgopb0.mongo
     .then(() => console.log('Database connected successfully'))
     .catch(err => console.error('Database connection error:', err));
 
-// API Creation
-app.get("/", (req, res) => {
-    res.send("Express App is Running");
-});
-
 // Image Storage Engine
 const storage = multer.diskStorage({
     destination: './upload/images',
@@ -42,40 +37,16 @@ app.post("/upload", upload.single('product'), (req, res) => {
     });
 });
 
-// Schema for Creating Products
+// Product Schema
 const productSchema = new mongoose.Schema({
-    id: {
-        type: Number,
-        required: true,
-    },
-    name: {
-        type: String,
-        required: true,
-    },
-    image: {
-        type: String,
-        required: true,
-    },
-    category: {
-        type: String,
-        required: true,
-    },
-    new_price: {
-        type: Number,
-        required: true,
-    },
-    old_price: {
-        type: Number,
-        required: true,
-    },
-    date: {
-        type: Date,
-        default: Date.now,
-    },
-    available: {
-        type: Boolean,
-        default: true,
-    }
+    id: { type: Number, required: true },
+    name: { type: String, required: true },
+    image: { type: String, required: true },
+    category: { type: String, required: true },
+    new_price: { type: Number, required: true },
+    old_price: { type: Number, required: true },
+    date: { type: Date, default: Date.now },
+    available: { type: Boolean, default: true }
 });
 
 const Product = mongoose.model("Product", productSchema);
@@ -92,18 +63,12 @@ app.post('/addproduct', async (req, res) => {
         old_price: req.body.old_price,
     });
     await product.save();
-    res.json({
-        success: true,
-        name: req.body.name,
-    });
+    res.json({ success: true, name: req.body.name });
 });
 
 app.post('/removeproduct', async (req, res) => {
     await Product.findOneAndDelete({ id: req.body.id });
-    res.json({
-        success: true,
-        name: req.body.name
-    });
+    res.json({ success: true, name: req.body.name });
 });
 
 app.get('/allproducts', async (req, res) => {
@@ -111,31 +76,19 @@ app.get('/allproducts', async (req, res) => {
     res.send(products);
 });
 
-// Schema for creating user
+// User Schema and Model
 const userSchema = new mongoose.Schema({
-    name: {
-        type: String,
-    },
-    email: {
-        type: String,
-        unique: true,
-    },
-    password: {
-        type: String,
-    },
-    cartData: {
-        type: Object,
-    },
-    date: {
-        type: Date,
-        default: Date.now,
-    }
+    name: { type: String },
+    email: { type: String, unique: true },
+    password: { type: String },
+    cartData: { type: Object },
+    date: { type: Date, default: Date.now }
 });
 
-const Users = mongoose.model('Users', userSchema);
+const User = mongoose.model('User', userSchema);
 
 app.post('/signup', async (req, res) => {
-    let check = await Users.findOne({ email: req.body.email });
+    let check = await User.findOne({ email: req.body.email });
     if (check) {
         return res.status(400).json({ success: false, errors: "Existing user found with the same email address" });
     }
@@ -143,35 +96,24 @@ app.post('/signup', async (req, res) => {
     for (let i = 0; i < 300; i++) {
         cart[i] = 0;
     }
-    const user = new Users({
+    const user = new User({
         name: req.body.username,
         email: req.body.email,
         password: req.body.password,
         cartData: cart,
     });
-
     await user.save();
-
-    const data = {
-        user: {
-            id: user._id
-        }
-    };
-
+    const data = { user: { id: user._id } };
     const token = jwt.sign(data, 'secret_ecom');
     res.json({ success: true, token });
 });
 
 app.post('/login', async (req, res) => {
-    let user = await Users.findOne({ email: req.body.email });
+    let user = await User.findOne({ email: req.body.email });
     if (user) {
         const passCompare = req.body.password === user.password;
         if (passCompare) {
-            const data = {
-                user: {
-                    id: user._id
-                }
-            };
+            const data = { user: { id: user._id } };
             const token = jwt.sign(data, 'secret_ecom');
             res.json({ success: true, token });
         } else {
@@ -210,55 +152,52 @@ const fetchUser = async (req, res, next) => {
 };
 
 app.post('/addtocart', fetchUser, async (req, res) => {
-    let userData = await Users.findOne({ _id: req.user.id });
+    let userData = await User.findOne({ _id: req.user.id });
     userData.cartData[req.body.itemId] += 1;
-    await Users.findOneAndUpdate({ _id: req.user.id }, { cartData: userData.cartData });
+    await User.findOneAndUpdate({ _id: req.user.id }, { cartData: userData.cartData });
     res.send("Added");
 });
 
 app.post('/removefromcart', fetchUser, async (req, res) => {
-    let userData = await Users.findOne({ _id: req.user.id });
+    let userData = await User.findOne({ _id: req.user.id });
     if (userData.cartData[req.body.itemId] > 0)
         userData.cartData[req.body.itemId] -= 1;
-    await Users.findOneAndUpdate({ _id: req.user.id }, { cartData: userData.cartData });
+    await User.findOneAndUpdate({ _id: req.user.id }, { cartData: userData.cartData });
     res.send("Removed");
 });
 
 app.post('/getcart', fetchUser, async (req, res) => {
-    let userData = await Users.findOne({ _id: req.user.id });
+    let userData = await User.findOne({ _id: req.user.id });
     if (!userData) {
         return res.status(404).send({ errors: "User not found" });
     }
     res.json(userData.cartData);
 });
 
-// Schema for creating order
+// Order Schema and Model
 const orderSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Users',
-        required: true
-    },
-    items: {
-        type: Array,
-        required: true
-    },
-    totalAmount: {
-        type: Number,
-        required: true
-    },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    items: [
+        {
+            _id: false,
+            id: { type: mongoose.Schema.Types.ObjectId, required: true },
+            name: { type: String, required: true },
+            quantity: { type: Number, required: true }
+        }
+    ],
+    totalAmount: { type: Number, required: true },
     deliveryInfo: {
-        type: Object,
-        required: true
+        firstName: String,
+        lastName: String,
+        email: String,
+        street: String,
+        city: String,
+        state: String,
+        zipCode: String,
+        country: String
     },
-    orderDate: {
-        type: Date,
-        default: Date.now
-    },
-    image: {
-        type: String,
-        required: true,
-    }
+    image: { type: String, required: true },
+    orderDate: { type: Date, default: Date.now }
 });
 
 const Order = mongoose.model('Order', orderSchema);
@@ -268,9 +207,16 @@ app.post('/placeorder', upload.single('image'), fetchUser, async (req, res) => {
         const userId = req.user.id;
         const { items, totalAmount, deliveryInfo } = req.body;
 
+        // Parse the items JSON string into an array of objects
+        const parsedItems = JSON.parse(items);
+
         const order = new Order({
             userId,
-            items: JSON.parse(items),
+            items: parsedItems.map(item => ({
+                id: mongoose.Types.ObjectId(item.id), // Make sure to include the item ID
+                name: item.name,
+                quantity: item.quantity
+            })),
             totalAmount,
             deliveryInfo: JSON.parse(deliveryInfo),
             image: req.file ? `http://localhost:${port}/images/${req.file.filename}` : null
@@ -288,6 +234,23 @@ app.post('/placeorder', upload.single('image'), fetchUser, async (req, res) => {
     }
 });
 
+app.get('/placeorder', async (req, res) => {
+    try {
+        const orders = await Order.find().populate('userId', 'name');
+        const formattedOrders = orders.map(order => ({
+            ...order.toObject(),
+            items: order.items.map(item => ({
+                id: item.id, // Ensure item ID is included
+                name: item.name,
+                quantity: item.quantity
+            }))
+        }));
+        res.json(formattedOrders);
+    } catch (error) {
+        console.error('Failed to fetch orders:', error.stack);  // Improved logging
+        res.status(500).json({ success: false, message: "Failed to fetch orders", error: error.message });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

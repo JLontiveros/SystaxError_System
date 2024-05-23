@@ -30,6 +30,7 @@
     width: 100%;
     max-width: max(40%,500px);
 }
+
 .place-order .cart-total button{
     margin-top: 30px;
 }
@@ -38,3 +39,31 @@
     margin-top: 30px; 
     border-radius: 6px;
 }
+.placeorder-format-main {
+    display: flex;
+    align-items: center;
+    grid-template-columns: 0.5fr 2fr 1fr 1fr 1fr 1fr;
+    gap: 10px;
+    padding: 10px 0; /* Adjusted padding */
+    color: #454545;
+    font-size: 14px; /* Adjusted font size */
+  }
+  
+  .placeorder-format-main img {
+    width: 62px; /* Adjusted image size */
+  }
+  
+  .placeorder-format-main p {
+    margin: 20px; /* Remove default margin */
+  }
+  
+  .order-quantity {
+    padding: 5px 10px; /* Adjusted button padding */
+    font-size: 12px; /* Adjusted font size */
+    margin: 20px;
+  }
+  .order-remove-icon {
+    width: 20px;
+    cursor: pointer;
+  }
+  

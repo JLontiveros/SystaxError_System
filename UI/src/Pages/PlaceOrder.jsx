@@ -4,9 +4,10 @@ import { ShopContext } from '../Context/ShopContext';
 import axios from 'axios';
 import upload_area from '../Components/Assets/upload_area.svg';
 import gikas from '../Components/Assets/gikas.PNG';
+import delete_icon from '../Components/Assets/delete_icon.png';
 
 const PlaceOrder = () => {
-  const { getTotalCartAmount, cartItems } = useContext(ShopContext);
+  const { getTotalCartAmount, cartItems, all_product, removeFromCart } = useContext(ShopContext);
   const [image, setImage] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -31,26 +32,30 @@ const PlaceOrder = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const totalAmount = getTotalCartAmount();
-    const items = cartItems;
-
-    const form = new FormData();
-    form.append('items', JSON.stringify(items));
-    form.append('totalAmount', totalAmount);
-    form.append('deliveryInfo', JSON.stringify(formData));
-    if (image) {
-      form.append('image', image);
-    }
-
+  
     try {
-      const response = await axios.post('http://localhost:4000/placeorder', form, {
+      const totalAmount = getTotalCartAmount();
+      const items = all_product
+        .filter(product => cartItems[product.id] > 0)
+        .map(product => ({
+          id: product.id,
+          name: product.name,
+          quantity: cartItems[product.id]
+        }));
+    
+      const formDataJSON = new FormData();
+      formDataJSON.append('items', JSON.stringify(items));
+      formDataJSON.append('totalAmount', totalAmount);
+      formDataJSON.append('deliveryInfo', JSON.stringify(formData));
+      formDataJSON.append('image', image);
+    
+      const response = await axios.post('http://localhost:4000/placeorder', formDataJSON, {
         headers: {
           'auth-token': `${localStorage.getItem('auth-token')}`,
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data' 
         }
       });
-
+  
       if (response.data.success) {
         alert('Order placed successfully! Wait for us to message you about your order!');
       } else {
@@ -58,9 +63,13 @@ const PlaceOrder = () => {
       }
     } catch (error) {
       console.error('Error placing order:', error);
-      alert('Error placing order');
+      if (error.response) {
+        console.error('Server responded with:', error.response.data);
+      }
+      alert('Error placing order. Please try again later.');
     }
   };
+  
 
   const imageHandler = (e) => {
     setImage(e.target.files[0]);
@@ -92,8 +101,27 @@ const PlaceOrder = () => {
         </label>
       </div>
       <div className="place-order-right">
+        {all_product.map((e) => {
+          if (cartItems[e.id] > 0) {
+            return (
+              <div key={e.id}>
+                <div className="placeorder-format placeorder-format-main">
+                  <img src={e.image} alt="" className='order-product-icon' />
+                  <p>{e.name}</p>
+                  <p>PHP {e.new_price}</p>
+                  <button className='order-quantity'>{cartItems[e.id]}</button>
+                  <p>PHP {e.new_price * cartItems[e.id]}</p>
+                  <img className='order-remove-icon' src={delete_icon} onClick={() => { removeFromCart(e.id) }} alt="" />
+                </div>
+                <hr />
+              </div>
+            );
+          }
+          return null;
+        })}
         <div className="cartitems-total">
-          <h1>Cart Totals</h1>
+          <h1>Cart Total</h1>
+          <hr />
           <div>
             <div className="cartitems-total-item">
               <p>Subtotal</p>
