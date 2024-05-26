@@ -4,21 +4,20 @@ import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-const exchangeRate = 50;
 
 // Place user order for frontend
 const placeOrder = async (req, res) => {
     try {
-        const frontend_url = "http://localhost:5173"; 
+        const frontend_url = "http://localhost:5174"; 
+        
 
         // Stringify the address object before saving it
-        const address = JSON.stringify(req.body.address);
 
         const newOrder = new orderModel({
             userId: req.body.userId,
             items: req.body.items,
             amount: req.body.amount,
-            address: address,
+            address: req.body.address,
             payment: false,
         });
         await newOrder.save();
@@ -52,7 +51,7 @@ const placeOrder = async (req, res) => {
 
        // res.json({ success: true, session_url: session.url });
     } catch (error) {
-        console.error("Error placing order:", error);
+        console.error("Please Fill up this form:", error);
         res.status(500).json({ success: false, message: "Error placing order" });
     }
 }
@@ -69,6 +68,29 @@ const placeOrder = async (req, res) => {
         }
     }
 
+    //Listng orders for admin panel
+
+    const listOrders = async (req,res) =>{
+        try {
+            const orders = await orderModel.find({});
+            res.json({success:true,data:orders})
+        } catch (error) {
+            console.log(error);
+            res.json({success:false,message:"Error"})
+        }
+    }
+
+    //api for update status of order
+    const updateStatus = async (req,res) =>{
+        try {
+            await orderModel.findByIdAndUpdate(req.body.orderId,{status:req.body.status})
+            res.json({success:true,message:"Status Updated"})
+        } catch (error) {
+            console.log(error);
+            res.json({success:false,message:"Error"})
+        }
+    }
 
 
-export { placeOrder,userOrders };
+
+export { placeOrder,userOrders, listOrders, updateStatus };

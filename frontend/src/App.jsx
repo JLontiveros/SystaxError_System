@@ -8,10 +8,12 @@ import Footer from './components/Footer/Footer'
 import LoginPopup from './components/LoginPopup/LoginPopup'
 import { useState } from 'react'
 import MyOrders from './pages/MyOrders/MyOrders'
+import Payment from './components/Payment/Payment'
 
 const App = () => {
 
   const [showLogin,setShowLogin] = useState(false)
+  const [showPayment, setShowPayment] = useState(false);
 
   return (
     <>
@@ -23,9 +25,11 @@ const App = () => {
         < Route path = '/cart' element={<Cart/>} />
         < Route path = '/order' element={<PlaceOrder/>} />
         < Route path = '/myorders' element={<MyOrders/>} />
+        < Route path = '/payment' element = {<Payment/>}/>
       </Routes>
     </div>
     <Footer/>
+    {showPayment && <Payment setShowPayment={setShowPayment} />}
     </>
   )
 }
