@@ -49,6 +49,39 @@
     border: 4px solid tomato;
     padding: 2px;
 }
+.explore-menu .medyoheader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    margin-left: 30%;
+}
+
+.search-input {
+    padding: 10px 20px 10px 40px; /* Adjust padding to accommodate the icon */
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: tomato;
+}
+
+.medyoheader img {
+    position: absolute;
+    margin-left: 10px; /* Space between icon and input field border */
+    height: 20px;
+    pointer-events: none;
+}
+
+.medyoheader {
+    position: relative;
+}
+
 @media (max-width:1050px) {
     .explore-menu-text{
         max-width: 100%;

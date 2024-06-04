@@ -8,11 +8,9 @@ const Footer = () => {
       <div className="footer-content">
         <div className="footer-content-left">
             <img src={assets.logo} alt="" />
-            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sed distinctio, aliquid, nobis a animi architecto deserunt sequi nam iste libero est commodi delectus illo necessitatibus alias harum possimus. Dolores, assumenda?</p>
+            <p>Bark's n Meow mission is simple yet profound: to provide the highest quality products at an affordable price, ensuring that every pet receives the care and attention they deserve. In this research paper, we delve into the core values and innovative approaches that underpin Bark's n Meow's operations, exploring how the company's dedication to excellence and empathy sets it apart in the competitive pet care industry. Through a comprehensive examination of Bark's n Meow's mission and vision, we uncover the profound impact of their commitment to pet welfare and customer satisfaction.</p>
             <div className="footer-social-icons">
                 <img src={assets.facebook_icon} alt="" />
-                <img src={assets.twitter_icon} alt="" />
-                <img src={assets.linkedin_icon} alt="" />
             </div>
         </div>
         <div className="footer-content-center">

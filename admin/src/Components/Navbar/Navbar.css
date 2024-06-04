@@ -3,9 +3,10 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 4%;
+    background-color: tomato;
 }
 .navbar .logo{
-    width: max(10%,80px);
+    width: max(5%,30px);
 }
 .navbar .profile{
     width: 40px;
