@@ -57,3 +57,12 @@
         flex-direction: column-reverse;
     }
 }
+.recommendation-section h3{
+    background-color: rgb(255, 191, 73);
+    border-style: solid;
+}
+
+.recommendation-section ul{
+    border-width: 1px;
+    border-style: solid;
+}

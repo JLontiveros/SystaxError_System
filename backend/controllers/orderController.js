@@ -10,7 +10,6 @@ const placeOrder = async (req, res) => {
         const frontend_url = "http://localhost:5174"; 
 
         const { userId, items, amount, address } = req.body;
-        const { image } = req.files; // Assuming the image is sent as "image" in form data
 
         // Save the image to the database or storage system
         // Example: const imageUrl = await saveImageToDatabase(image);
@@ -19,8 +18,7 @@ const placeOrder = async (req, res) => {
             userId,
             items,
             amount,
-            address,
-            receiptImage: imageUrl, // Save the image URL or any identifier
+            address, // Save the image URL or any identifier
             payment: false,
         });
         await newOrder.save();

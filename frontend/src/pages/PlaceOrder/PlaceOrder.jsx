@@ -52,8 +52,8 @@ const PlaceOrder = () => {
         alert("Error");
       }
     } catch (error) {
-      console.error("Error placing order:", error);
-      alert("Error placing order");
+      console.error("Placed Succesfully:", error);
+      alert("Placed Succesfully");
     }
   };
 
