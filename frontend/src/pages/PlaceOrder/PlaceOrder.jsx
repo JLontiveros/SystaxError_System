@@ -7,8 +7,9 @@ import Payment from '../../components/Payment/Payment'
 
 const PlaceOrder = () => {
   const { getTotalCartAmount, token, product_list, cartItems, url } = useContext(StoreContext);
-  const [showPayment, setShowPayment] = useState(false);
-  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const [data, setData] = useState({
     firstName: "",
@@ -23,42 +24,59 @@ const PlaceOrder = () => {
   });
 
   const onChangeHandler = (event) => {
-    
-    const {name, value } = event.target;
+    const { name, value } = event.target;
     setData(prevData => ({ ...prevData, [name]: value }));
   };
 
   const placeOrder = async (event) => {
     event.preventDefault();
+    setIsProcessing(true);
+    setError(null);
+    
+    // Create the order items array
     let orderItems = [];
     product_list.forEach((item) => {
       if (cartItems[item._id] > 0) {
-        let itemInfo = { ...item };
-        itemInfo["quantity"] = cartItems[item._id];
-        orderItems.push(itemInfo);
+        orderItems.push({
+          _id: item._id,
+          name: item.name,
+          new_price: item.new_price,
+          quantity: cartItems[item._id]
+        });
       }
     });
-    let orderData = {
+
+    // Create the order data object
+    const orderData = {
       address: data,
       items: orderItems,
-      amount: getTotalCartAmount() + 47,
+      amount: getTotalCartAmount() + 90
     };
+
     try {
-      let response = await axios.post(`${url}/api/order/place`, orderData, { headers: { token } });
+      const response = await axios.post(
+        `${url}/api/order/place`, 
+        orderData,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`
+          } 
+        }
+      );
+
       if (response.data.success) {
-        setOrderPlaced(true); // Set the order placed notification
-        setShowPayment(true);  // Show the payment component
+        window.location.href = response.data.session_url;
       } else {
-        alert("Error");
+        setError(response.data.message || "Failed to create order");
       }
     } catch (error) {
-      console.error("Placed Succesfully:", error);
-      alert("Placed Succesfully");
+      console.error('Order error:', error);
+      setError(error.response?.data?.message || "An error occurred");
+    } finally {
+      setIsProcessing(false);
     }
-  };
-
-  const navigate = useNavigate();
-
+};
+  
   useEffect(() => {
     if (!token) {
       navigate('/cart');
@@ -69,7 +87,7 @@ const PlaceOrder = () => {
 
   return (
     <>
-      {orderPlaced && <div className="order-placed-notification">Order is placed, wait for us to message you about your order</div>}
+      {/* {orderPlaced && <div className="order-placed-notification">Order is placed, wait for us to message you about your order</div>} */}
       <form onSubmit={placeOrder} className='place-order'>
         <div className="place-order-left">
           <p className="title">Delivery Information</p>
@@ -100,19 +118,19 @@ const PlaceOrder = () => {
               <hr />
               <div className="cart-total-details">
                 <p>Standard Delivery Fee</p>
-                <p>PHP {getTotalCartAmount() === 0 ? 0 : 47}</p>
+                <p>PHP {getTotalCartAmount() === 0 ? 0 : 90}</p>
               </div>
               <hr />
               <div className="cart-total-details">
                 <b>Total</b>
-                <b>PHP {getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + 47}</b>
+                <b>PHP {getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + 90}</b>
               </div>
             </div>
-            <button type='submit' onClick={() => setShowPayment(true)}>G-Cash Payment</button>
+            <button type='submit'>Proceed to Payment</button>
           </div>
         </div>
       </form>
-      {showPayment && <Payment setShowPayment={setShowPayment} />}
+      {/* {showPayment && <Payment setShowPayment={setShowPayment} />} */}
     </>
   );
 }

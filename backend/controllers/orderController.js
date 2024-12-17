@@ -7,53 +7,108 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // Place user order for frontend
 const placeOrder = async (req, res) => {
     try {
-        const frontend_url = "http://localhost:5174"; 
-
+        const frontend_url = process.env.FRONTEND_URL || "http://localhost:5173";
         const { userId, items, amount, address } = req.body;
 
-        // Save the image to the database or storage system
-        // Example: const imageUrl = await saveImageToDatabase(image);
+        // Validate the input
+        if (!items?.length || !amount || !address) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Missing required fields" 
+            });
+        }
 
+        // Create order
         const newOrder = new orderModel({
             userId,
             items,
             amount,
-            address, // Save the image URL or any identifier
+            address,
             payment: false,
+            status: 'pending'
         });
         await newOrder.save();
-        
-        // Clear cart data for the user
-        await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
         // Create Stripe session
-        const lineItems = items.map((item) => {
-            console.log("Item price:", item.new_price); 
-            return {
+        const line_items = items.map((item) => ({
+            price_data: {
+                currency: "php",
+                product_data: { 
+                    name: item.name
+                },
+                unit_amount: Math.round(item.new_price * 100), // Convert to smallest currency unit
+            },
+            quantity: item.quantity
+        }));
+
+        // Add delivery fee
+        if (amount > 0) {
+            line_items.push({
                 price_data: {
                     currency: "php",
-                    product_data: { name: item.name },
-                    unit_amount: item.new_price
+                    product_data: { name: "Delivery Fee" },
+                    unit_amount: 9000, // 90 PHP in cents
                 },
-                quantity: item.quantity
-            };
+                quantity: 1
+            });
+        }
+
+        const session = await stripe.checkout.sessions.create({
+            line_items,
+            mode: 'payment',
+            success_url: `${frontend_url}/success`,
+            cancel_url: `${frontend_url}/cancel`,
         });
 
-        console.log("Line items:", lineItems);
+        res.json({
+            success: true,
+            session_url: session.url,
+            orderId: newOrder._id
+        });
 
-        // const session = await stripe.checkout.sessions.create({
-        //     line_items: lineItems,
-        //     mode: 'payment',
-        //     success_url: `${frontend_url}/verify?success=true&orderId=${newOrder._id}`,
-        //     cancel_url: `${frontend_url}/verify?success=false&orderId=${newOrder._id}`,
-        // });
-
-        // res.json({ success: true, session_url: session.url });
     } catch (error) {
-        console.error("Error placing order:", error);
-        res.status(500).json({ success: false, message: "Error placing order" });
+        console.error("Stripe session creation error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Error creating payment session"
+        });
     }
-}
+};
+
+const verifyOrder = async (req, res) => {
+    const { orderId, success } = req.body;
+    
+    try {
+        if (success === "true") {
+            await orderModel.findByIdAndUpdate(orderId, {
+                payment: true,
+                status: 'paid',
+                updatedAt: new Date()
+            });
+            
+            // Clear cart data for the user
+            const order = await orderModel.findById(orderId);
+            if (order) {
+                await userModel.findByIdAndUpdate(order.userId, { cartData: {} });
+            }
+            
+            res.json({ success: true, message: "Payment verified" });
+        } else {
+            // If payment failed, delete the order
+            await orderModel.findByIdAndUpdate(orderId, {
+                status: 'cancelled',
+                updatedAt: new Date()
+            });
+            res.json({ success: false, message: "Payment not completed" });
+        }
+    } catch (error) {
+        console.error("Verification error:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error verifying payment" 
+        });
+    }
+};
 
 // users orders for frontend
 const userOrders = async (req,res) =>{
@@ -89,4 +144,4 @@ const updateStatus = async (req,res) =>{
     }
 }
 
-export { placeOrder,userOrders, listOrders, updateStatus };
+export { placeOrder,userOrders, listOrders, updateStatus, verifyOrder};

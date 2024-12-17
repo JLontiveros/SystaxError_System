@@ -61,12 +61,12 @@ const Cart = () => {
             <hr />
             <div className="cart-total-details">
               <p>Delivery fee</p>
-              <p>PHP {getTotalCartAmount() === 0 ? 0 : 47}</p>
+              <p>PHP {getTotalCartAmount() === 0 ? 0 : 90}</p>
             </div>
             <hr />
             <div className="cart-total-details">
               <b>Total</b>
-              <b>PHP {getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + 47}</b>
+              <b>PHP {getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + 90}</b>
             </div>
           </div>
           <button onClick={() => navigate('/order')}>Proceed to Check Out</button>

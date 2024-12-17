@@ -6,60 +6,140 @@ export const StoreContext = createContext(null);
 const StoreContextProvider = (props) => {
     const [cartItems, setCartItems] = useState({});
     const url = 'http://localhost:4000';
-    const [token, setToken] = useState("");
+    const [token, setToken] = useState(localStorage.getItem('token'));
     const [product_list, setProductList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const addToCart = async (itemId) => {
-        if (!cartItems[itemId]) {
-            setCartItems((prev) => ({ ...prev, [itemId]: 1}))
-        }
-        else{
-            setCartItems((prev) =>({ ...prev, [itemId]: prev[itemId] + 1 }))
-        }
-        if (token) {
-            await axios.post(url+"/api/cart/add",{itemId},{headers:{token}})
+        try {
+            setCartItems((prev) => ({
+                ...prev,
+                [itemId]: (prev[itemId] || 0) + 1
+            }));
+
+            if (token) {
+                await axios.post(
+                    `${url}/api/cart/add`,
+                    { itemId },
+                    { headers: { token } }
+                );
+            }
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            // Rollback the optimistic update if the API call fails
+            setCartItems((prev) => ({
+                ...prev,
+                [itemId]: (prev[itemId] || 0) - 1
+            }));
         }
     }
 
     const removeFromCart = async (itemId) => {
-        setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] -1 }));
+        try {
+            setCartItems((prev) => {
+                const updatedCart = { ...prev };
+                if (updatedCart[itemId] > 0) {
+                    updatedCart[itemId] -= 1;
+                    if (updatedCart[itemId] === 0) {
+                        delete updatedCart[itemId];
+                    }
+                }
+                return updatedCart;
+            });
+
             if (token) {
-                await axios.post(url+"/api/cart/remove",{itemId},{headers:{token}})
+                await axios.post(
+                    `${url}/api/cart/remove`,
+                    { itemId },
+                    { headers: { token } }
+                );
             }
+        } catch (error) {
+            console.error('Error removing from cart:', error);
+            // Rollback the optimistic update if the API call fails
+            setCartItems((prev) => ({
+                ...prev,
+                [itemId]: (prev[itemId] || 0) + 1
+            }));
+        }
     };
 
     const getTotalCartAmount = () => {
-        let totalAmount = 0;
-        for (const item in cartItems) {
-            if (cartItems[item] > 0) {
-                let itemInfo = product_list.find((product) => product._id === item);
-                if (itemInfo) {
-                    totalAmount += itemInfo.new_price * cartItems[item];
-                }
-            }
-        }
-        return totalAmount;
+        return Object.entries(cartItems).reduce((total, [itemId, quantity]) => {
+            const itemInfo = product_list.find((product) => product._id === itemId);
+            return total + (itemInfo ? itemInfo.new_price * quantity : 0);
+        }, 0);
     };
 
     const fetchProductList = async () => {
+        try {
             const response = await axios.get(`${url}/api/product/list`);
-            setProductList(response.data.data); 
+            setProductList(response.data.data);
+        } catch (error) {
+            console.error('Error fetching product list:', error);
+        }
     };
 
-    const loadCartData = async (token) =>{
-        const response = await axios.post(url+"/api/cart/get",{},{headers:{token}});
-        setCartItems(response.data.cartData);
+    const loadCartData = async (token) => {
+        try {
+            const response = await axios.post(
+                `${url}/api/cart/get`,
+                {},
+                { headers: { token } }
+            );
+            setCartItems(response.data.cartData || {});
+        } catch (error) {
+            console.error('Error loading cart data:', error);
+        }
     }
+
+    const isTokenExpired = (token) => {
+        try {
+            const decoded = JSON.parse(atob(token.split('.')[1]));
+            return decoded.exp * 1000 < Date.now();
+        } catch (error) {
+            return true;
+        }
+    };
+
+    // Check token expiration on mount and when token changes
+    useEffect(() => {
+        if (token && isTokenExpired(token)) {
+            // Clear token and redirect to login
+            localStorage.removeItem('token');
+            setToken(null);
+            // If you're using react-router, you can redirect to login here
+            window.location.href = '/login';
+        }
+    }, [token]);
+
+    const login = (newToken) => {
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        setToken(null);
+    };
 
     useEffect(() => {
         async function loadData() {
-            await fetchProductList();
-            if (localStorage.getItem("token")) {
-                setToken(localStorage.getItem("token"));
-                await loadCartData(localStorage.getItem("token"));
+            setIsLoading(true);
+            try {
+                await fetchProductList();
+                const storedToken = localStorage.getItem("token");
+                if (storedToken) {
+                    setToken(storedToken);
+                    await loadCartData(storedToken);
+                }
+            } catch (error) {
+                console.error('Error initializing data:', error);
+            } finally {
+                setIsLoading(false);
             }
         }
-        loadData(); 
+        loadData();
     }, []);
 
     const contextValue = {
@@ -71,12 +151,15 @@ const StoreContextProvider = (props) => {
         getTotalCartAmount,
         url,
         token,
-        setToken
+        setToken,
+        isLoading,
+        login,
+        logout,
     };
 
     return (
         <StoreContext.Provider value={contextValue}>
-            {props.children}
+            {!isLoading && props.children}
         </StoreContext.Provider>
     );
 };
