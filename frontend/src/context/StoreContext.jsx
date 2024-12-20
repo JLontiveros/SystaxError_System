@@ -21,7 +21,12 @@ const StoreContextProvider = (props) => {
                 await axios.post(
                     `${url}/api/cart/add`,
                     { itemId },
-                    { headers: { token } }
+                    { 
+                        headers: { 
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        } 
+                    }
                 );
             }
         } catch (error) {
@@ -51,7 +56,12 @@ const StoreContextProvider = (props) => {
                 await axios.post(
                     `${url}/api/cart/remove`,
                     { itemId },
-                    { headers: { token } }
+                    { 
+                        headers: { 
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        } 
+                    }
                 );
             }
         } catch (error) {
@@ -85,11 +95,20 @@ const StoreContextProvider = (props) => {
             const response = await axios.post(
                 `${url}/api/cart/get`,
                 {},
-                { headers: { token } }
+                { 
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    } 
+                }
             );
             setCartItems(response.data.cartData || {});
         } catch (error) {
             console.error('Error loading cart data:', error);
+            if (error.response?.status === 401) {
+                // Handle unauthorized error - clear token and redirect to login
+                logout();
+            }
         }
     }
 
@@ -118,10 +137,28 @@ const StoreContextProvider = (props) => {
         setToken(newToken);
     };
 
+    useEffect(() => {
+        const interceptor = axios.interceptors.response.use(
+            response => response,
+            error => {
+                if (error.response?.status === 401) {
+                    // Auto logout on 401 responses
+                    logout();
+                }
+                return Promise.reject(error);
+            }
+        );
+
+        return () => axios.interceptors.response.eject(interceptor);
+    }, []);
+
     const logout = () => {
         localStorage.removeItem('token');
         setToken(null);
+        setCartItems({});
+        window.location.href = '/login';
     };
+
 
     useEffect(() => {
         async function loadData() {

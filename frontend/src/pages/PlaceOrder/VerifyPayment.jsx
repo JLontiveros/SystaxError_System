@@ -5,36 +5,25 @@ const VerifyPayment = () => {
     const navigate = useNavigate();
     const { url } = useContext(StoreContext);
   
-    useEffect(() => {
-      const verifyPayment = async () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const success = urlParams.get('success');
-        const orderId = localStorage.getItem('pendingOrderId');
-  
-        if (!orderId) {
-          setStatus('error');
-          return;
-        }
-  
-        try {
-          const response = await axios.post(`${url}/api/order/verify`, {
-            orderId,
-            success
-          });
-  
-          if (response.data.success) {
-            setStatus('success');
-            localStorage.removeItem('pendingOrderId');
-          } else {
-            setStatus('failed');
+    // In your success page component
+useEffect(() => {
+  const verifyPayment = async () => {
+      const orderId = new URLSearchParams(window.location.search).get('orderId');
+      if (orderId) {
+          try {
+              await axios.post(`${url}/api/order/verify`, {
+                  orderId,
+                  success: "true"
+              });
+              // Redirect to orders page or show success message
+          } catch (error) {
+              console.error("Error verifying payment:", error);
           }
-        } catch (error) {
-          setStatus('error');
-        }
-      };
+      }
+  };
   
-      verifyPayment();
-    }, []);
+  verifyPayment();
+}, []);
   
     const statusMessages = {
       verifying: 'Verifying your payment...',

@@ -111,16 +111,21 @@ const verifyOrder = async (req, res) => {
 };
 
 // users orders for frontend
-const userOrders = async (req,res) =>{
+const userOrders = async (req, res) => {
     try {
-        console.log("User ID:", req.body.userId); // Debug statement
-        const orders = await orderModel.find({ userId: req.body.userId });
+        const userId = req.userId; // Changed from req.body.userId
+        console.log("User ID:", userId);
+        
+        const orders = await orderModel.find({ userId });
         res.json({ success: true, data: orders });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: "Error" });
+        console.error("Error fetching orders:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error fetching orders" 
+        });
     }
-}
+};
 
 //Listng orders for admin panel
 const listOrders = async (req,res) =>{

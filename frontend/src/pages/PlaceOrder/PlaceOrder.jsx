@@ -48,6 +48,7 @@ const PlaceOrder = () => {
 
     // Create the order data object
     const orderData = {
+      userId: token, /* Get user ID from context or token */
       address: data,
       items: orderItems,
       amount: getTotalCartAmount() + 90

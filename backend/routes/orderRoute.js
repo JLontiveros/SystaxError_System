@@ -6,8 +6,9 @@ const orderRouter = express.Router();
 
 orderRouter.post("/place",authMiddleware,placeOrder);
 orderRouter.post("/userorders", authMiddleware, userOrders);
-orderRouter.get('/list',listOrders)
-orderRouter.post('/status',updateStatus)
+orderRouter.get('/list',listOrders);
+orderRouter.post('/status',updateStatus);
 orderRouter.post('/verify',verifyOrder);
+orderRouter.post('/userorders', authMiddleware, userOrders);
 
 export default orderRouter;
